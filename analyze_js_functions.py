@@ -14,6 +14,9 @@ print("Analyze JavaScript Functions")
 # To do:
 # Capture the body of the function { to } -DONE
 # Identify all non-JavaScript language function CALLs
+# Ignore commented lines:
+#   // style 1
+#   /* style 2 */
 # Need to distinguish between
 #  --helper functions,
 #  --regular functions,
@@ -51,6 +54,9 @@ JAVASCRIPT_KEYWORDS = [
 
 # Container for all function declaration information (names, args, lines)
 functionDeclarations = []
+
+# Container for all anonymous function declarations (lines, args)
+anonymousFunctions = []
 
 # This dicionary for checking for duplicate function names (keys)
 functionNames = {}
@@ -130,9 +136,9 @@ def getFunctionBody(functionRanges):
             funcOpen += currLine.count(leftSquig)
             funcClose += currLine.count(rightSquig)
             if funcOpen == funcClose:
-                print('End of function found.')
-                print('Count {', funcOpen)
-                print('Count }', funcClose)
+                # print('End of function found.')
+                # print('Count {', funcOpen)
+                # print('Count }', funcClose)
                 break
             i += 1
 
@@ -145,6 +151,8 @@ def getFunctionBody(functionRanges):
 def findFunctionCalls(line, lineNumber):
 
     funcDefinitionLines = getFuncDefinitionLines()
+
+
     #  Look for opening parenthesis
     if (leftParen in line):
         lparenSplit = line.split('(')
@@ -160,6 +168,13 @@ def findFunctionCalls(line, lineNumber):
 
             # split the funcCall on the dot
             dotSplit = funcCall.split('.')
+
+            # split the funcCall on leftSquig
+            # Case of: startCycle = Meteor.setTimeout(function(){cycle();}, 5000)
+            # should not become  ){cycle
+            leftSquigSplit = funcCall.split(leftSquig)
+            if len(leftSquigSplit) > 1:
+                funcCall = leftSquigSplit[-1]
 
             # Filter the function calls so that we have only those that are not part of the
             # function definition or part of JavaScript built-in functions or key words
@@ -181,6 +196,10 @@ def findFunctionCalls(line, lineNumber):
 
             else:
                 print('\t', lineNumber, ' funcCall:', funcCall)
+
+                if funcCall == 'function':
+                    anonymousFunctions.append({'line': lineNumber})
+
             j += 1
 
 
@@ -291,6 +310,8 @@ def main():
 
 
     # print(functionDeclarations[-2]['functionBody'])
+
+    print('\nanonymousFunctions', anonymousFunctions)
 
 
 if __name__ == "__main__":
