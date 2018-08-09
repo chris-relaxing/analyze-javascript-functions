@@ -1985,7 +1985,7 @@ const diffDays = function(d1, d2) {
   return ndays;
 }
 
-const diffDays = function(d1, d2) {
+const diffDays  =  function ( d1, d2 ) {
 // Calculate the difference of two dates in total days
   var ndays;
   let tv1 = d1.getTime();  // msec since 1970
@@ -1996,7 +1996,18 @@ const diffDays = function(d1, d2) {
   return ndays;
 }
 
-const diffDays = function(d1, d2) {
+function diffDays(d1, d2) {
+// Calculate the difference of two dates in total days
+  var ndays;
+  let tv1 = d1.getTime();  // msec since 1970
+  let tv2 = d2.getTime();
+  ndays = (tv2 - tv1) / 1000 / 86400;
+  ndays = Math.round(ndays - 0.5);
+  ndays = Math.abs(ndays);
+  return ndays;
+}
+
+function diffDays  (d1, d2) {
 // Calculate the difference of two dates in total days
   var ndays;
   let tv1 = d1.getTime();  // msec since 1970

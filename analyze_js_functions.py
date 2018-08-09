@@ -12,14 +12,21 @@ print("Analyze JavaScript Functions")
 # function placeHeader(
 
 # To do:
-# Need to distinguish between helper functions, regular functions, event handlers, and anonymous functions
+# Capture the body of the function { to }
+# Need to distinguish between
+#  --helper functions,
+#  --regular functions,
+#  --event handlers, and
+#  --anonymous functions
+#  --function declarations vs function expressions
+# Identify all function CALLs
 
 # ---------------------------------------------------
 
 # Path to JavaScript file to parse
 # jsFile = r"C:\Users\Chris Nielsen\Desktop\odyssey\client\resources\resource_edit.js"
-# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"
-jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"
+jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"
+# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"
 
 # Global tokens
 space = " "
@@ -27,6 +34,8 @@ function = "function"
 leftParen = "("
 rightParen = ")"
 equalSign = '='
+leftSquig = '{'
+rightSquig = '}'
 
 # Container for all function declaration information (names, args, lines)
 functionDeclarations = []
@@ -43,7 +52,7 @@ line = ex1.split()
 # ---------------------------------------------------
 def getFunctionName(line):
     """Parse the line to return the function name"""
-    # The original line has already been split blank spaces. line passed in is a list.
+    # The original line has already been split by blank spaces. line passed in is a list.
     # print(line.index(function))
     functionName = ""
 
@@ -84,6 +93,41 @@ def getFunctionArgs(line):
         print("Function args:", functionArgs)
         return functionArgs
 
+# ---------------------------------------------------
+def getFunctionBody(functionRanges):
+    """Gather the function body as a string."""
+    y = 0
+    for range in functionRanges:
+        start = range[0]
+        end   = range[1]
+        print('\n\nstart:', start, 'end:', end-1)
+
+        i = start-1   # adjust for 0 based indexing
+        funcOpen = 0
+        funcClose = 0
+        functionBody = ""
+        while i < end-1:
+            # currLine = x[i].rstrip()
+            currLine = x[i]
+            print(currLine)
+            functionBody += currLine
+
+            # print('Count {', currLine.count(leftSquig))
+            # print('Count }', currLine.count(rightSquig))
+            funcOpen += currLine.count(leftSquig)
+            funcClose += currLine.count(rightSquig)
+            if funcOpen == funcClose:
+                print('End of function found.')
+                print('Count {', funcOpen)
+                print('Count }', funcClose)
+                break
+            i += 1
+
+        functionDeclarations[y]['functionBody'] = functionBody
+        y += 1
+
+
+
 
 # ---------------------------------------------------
 def findFunctions(line, lineNumber):
@@ -97,6 +141,7 @@ def findFunctions(line, lineNumber):
         leftSide = lparen[0]     #look for key word 'function' on left side of the line
         leftSide = leftSide.split()
         if (function in leftSide):
+            # We've found a function!
             print("\n")
             print('Line:', lineNumber, line.rstrip())
 
@@ -110,7 +155,7 @@ def findFunctions(line, lineNumber):
             funcDetails = {
                 'name'  : functionName,
                 'args'  : functionArgs,
-                'line'  : line
+                'line'  : lineNumber
             }
             functionDeclarations.append(funcDetails)
 
@@ -132,7 +177,9 @@ def findFunctions(line, lineNumber):
                     # This function name is already in the duplicates dictionary, so add the new line location to the list
                     duplicateFunctionNames[functionName].append(lineNumber)
 
-
+            # Since we've just found the beginning of a function definition, let's
+            # also gather the function body
+            # getFunctionBody(line)
 
 
 # ---------------------------------------------------
@@ -140,6 +187,7 @@ def findFunctions(line, lineNumber):
 def main():
     # Reading of the JavaScript file - work on after perfecting pattern detection
     print("Reading file:", jsFile)
+    global x
 
     with open(jsFile, 'r') as js:
       x = js.readlines()
@@ -148,15 +196,40 @@ def main():
     # print('length', len(x))
     fileLength = len(x)
 
+    # Iterate over all lines to get function definition info
     i = 0
     for line in x:
       if(i < fileLength):
-          # parsedLine = line.rstrip().split()
           findFunctions(line, i+1)
       i += 1
 
+
+
     print('\n\nNumber of function definitions found:', len(functionDeclarations))
     print('Duplicate function names:', duplicateFunctionNames)
+
+    # Create function line ranges
+    i = 0
+    functionRanges = []
+    while i < len(functionDeclarations):
+        eof = len(x)+1
+        funcStart = functionDeclarations[i]['line']
+        try:
+            funcEnd = functionDeclarations[i+1]['line']
+        except:
+            funcEnd = eof
+        print(funcStart)
+        rangeTuple = (funcStart, funcEnd)
+        functionRanges.append(rangeTuple)
+        i += 1
+
+    print('functionRanges', functionRanges)
+    getFunctionBody(functionRanges)
+
+    for func in functionDeclarations:
+        print('\n\n', func)
+
+    print(functionDeclarations[-2]['functionBody'])
 
 if __name__ == "__main__":
   main()
