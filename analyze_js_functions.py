@@ -12,14 +12,15 @@ print("Analyze JavaScript Functions")
 # function placeHeader(
 
 # To do:
-# Capture the body of the function { to }
+# Capture the body of the function { to } -DONE
+# Identify all function CALLs
 # Need to distinguish between
 #  --helper functions,
 #  --regular functions,
 #  --event handlers, and
 #  --anonymous functions
 #  --function declarations vs function expressions
-# Identify all function CALLs
+
 
 # ---------------------------------------------------
 
@@ -106,14 +107,12 @@ def getFunctionBody(functionRanges):
         funcOpen = 0
         funcClose = 0
         functionBody = ""
+        functionBodyLineCount = 0
         while i < end-1:
-            # currLine = x[i].rstrip()
             currLine = x[i]
             print(currLine)
             functionBody += currLine
-
-            # print('Count {', currLine.count(leftSquig))
-            # print('Count }', currLine.count(rightSquig))
+            functionBodyLineCount += 1
             funcOpen += currLine.count(leftSquig)
             funcClose += currLine.count(rightSquig)
             if funcOpen == funcClose:
@@ -123,7 +122,9 @@ def getFunctionBody(functionRanges):
                 break
             i += 1
 
+        # Add the function body to the functionDeclarations dictionary with key 'functionBody'
         functionDeclarations[y]['functionBody'] = functionBody
+        functionDeclarations[y]['functionBodyLineCount'] = functionBodyLineCount
         y += 1
 
 
