@@ -13,7 +13,7 @@ print("Analyze JavaScript Functions")
 
 # To do:
 # Capture the body of the function { to } -DONE
-# Identify all function CALLs
+# Identify all non-JavaScript language function CALLs
 # Need to distinguish between
 #  --helper functions,
 #  --regular functions,
@@ -31,12 +31,23 @@ jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\te
 
 # Global tokens
 space = " "
-function = "function"
-leftParen = "("
-rightParen = ")"
+function = 'function'
+leftParen = '('
+rightParen = ')'
 equalSign = '='
 leftSquig = '{'
 rightSquig = '}'
+
+# These are JavaScript language functions and devices that use parenthesis
+# Don't want to comingle these with code base function calls
+JAVASCRIPT_FUNCTIONS = [
+    'console.log', 'push', 'isArray', 'Date', 'toISOString', 'moment', 'toDate', 'getDate', 'getMonth', 'getFullYear',
+    'toString', 'slice', 'toLocaleString', 'setTimeout', '$', 'clearTimeout', 'if', 'substring', 'substr', 'charAt',
+    'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'escape', 'eval', 'isFinite', 'isNaN', 'Number',
+    'parseFloat', 'parseInt', 'String', 'unescape', 'log', 'valueOf'
+]
+
+
 
 # Container for all function declaration information (names, args, lines)
 functionDeclarations = []
@@ -110,7 +121,10 @@ def getFunctionBody(functionRanges):
         functionBodyLineCount = 0
         while i < end-1:
             currLine = x[i]
-            print(currLine)
+            # print(currLine)
+
+            findFunctionCalls(currLine, i+1)
+
             functionBody += currLine
             functionBodyLineCount += 1
             funcOpen += currLine.count(leftSquig)
@@ -128,6 +142,34 @@ def getFunctionBody(functionRanges):
         y += 1
 
 
+def findFunctionCalls(line, lineNumber):
+    #  Look for opening parenthesis
+    if (leftParen in line):
+        lparenSplit = line.split('(')
+        # print('lparenSplit', lparenSplit, len(lparenSplit))
+        # Last index in lparenSplit does not contain function call name
+
+        j = 0
+        while j < len(lparenSplit)-1:
+            l = lparenSplit[j]
+            # print('\t', l)
+            l = l.split()
+            funcCall = l[-1]
+
+            # Get rid of the first instances of function because they are the function definition
+            # if j == 0:  # if it is the first line sent for this range
+            #     if funcCall == 'function':
+            #         pass
+            #     if len(l) >= 2:
+            #         otherFunctionDef = l[-2]
+            #         if otherFunctionDef == 'function':
+            #             pass
+            # else:
+            print('\t', lineNumber, ' funcCall:', funcCall)
+            j += 1
+        # leftSide = lparen[0]
+        # for string in
+        # leftSide = leftSide.split()
 
 
 # ---------------------------------------------------
@@ -204,8 +246,6 @@ def main():
           findFunctions(line, i+1)
       i += 1
 
-
-
     print('\n\nNumber of function definitions found:', len(functionDeclarations))
     print('Duplicate function names:', duplicateFunctionNames)
 
@@ -230,7 +270,14 @@ def main():
     for func in functionDeclarations:
         print('\n\n', func)
 
-    print(functionDeclarations[-2]['functionBody'])
+    # print(functionDeclarations[-2]['functionBody'])
+
+    # Iterate over all lines again to get function calls
+    # i = 0
+    # for line in x:
+    #   if(i < fileLength):
+    #       findFunctionCalls(line, i+1)
+    #   i += 1
 
 if __name__ == "__main__":
   main()
