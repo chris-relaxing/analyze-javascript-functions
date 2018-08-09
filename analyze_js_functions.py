@@ -40,11 +40,11 @@ rightSquig = '}'
 
 # These are JavaScript language functions and devices that use parenthesis
 # Don't want to comingle these with code base function calls
-JAVASCRIPT_FUNCTIONS = [
+JAVASCRIPT_KEYWORDS = [
     'console.log', 'push', 'isArray', 'Date', 'toISOString', 'moment', 'toDate', 'getDate', 'getMonth', 'getFullYear',
-    'toString', 'slice', 'toLocaleString', 'setTimeout', '$', 'clearTimeout', 'if', 'substring', 'substr', 'charAt',
-    'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent', 'escape', 'eval', 'isFinite', 'isNaN', 'Number',
-    'parseFloat', 'parseInt', 'String', 'unescape', 'log', 'valueOf'
+    'toString', 'slice', 'toLocaleString', '$', 'if', 'substring', 'substr', 'charAt', 'decodeURI', 'decodeURIComponent',
+    'encodeURI', 'encodeURIComponent', 'escape', 'eval', 'isFinite', 'isNaN', 'Number', 'parseFloat', 'parseInt', 'String',
+    'unescape', 'log', 'valueOf'
 ]
 
 
@@ -141,8 +141,10 @@ def getFunctionBody(functionRanges):
         functionDeclarations[y]['functionBodyLineCount'] = functionBodyLineCount
         y += 1
 
-
+# ---------------------------------------------------
 def findFunctionCalls(line, lineNumber):
+
+    funcDefinitionLines = getFuncDefinitionLines()
     #  Look for opening parenthesis
     if (leftParen in line):
         lparenSplit = line.split('(')
@@ -152,24 +154,34 @@ def findFunctionCalls(line, lineNumber):
         j = 0
         while j < len(lparenSplit)-1:
             l = lparenSplit[j]
-            # print('\t', l)
+            # print('\t l is:', l)
             l = l.split()
             funcCall = l[-1]
 
-            # Get rid of the first instances of function because they are the function definition
-            # if j == 0:  # if it is the first line sent for this range
-            #     if funcCall == 'function':
-            #         pass
-            #     if len(l) >= 2:
-            #         otherFunctionDef = l[-2]
-            #         if otherFunctionDef == 'function':
-            #             pass
-            # else:
-            print('\t', lineNumber, ' funcCall:', funcCall)
+            # split the funcCall on the dot
+            dotSplit = funcCall.split('.')
+
+            # Filter the function calls so that we have only those that are not part of the
+            # function definition or part of JavaScript built-in functions or key words
+            # -----------------------------------------------------
+
+            # Get rid of the first instances of function because they are part of the function definition
+            # For example: let get = function (n) { return Session.get(pre + n) };
+            if lineNumber in funcDefinitionLines and funcCall == 'function':
+                pass
+
+            # Make sure this is not another function definition (alternate format)
+            # For example: function SQLquery(queryString, callback) {
+            elif lineNumber in funcDefinitionLines and len(l) >= 2 and l[-2] == 'function':
+                pass
+
+            # Filter out function names that are JavaScript key words
+            elif funcCall in JAVASCRIPT_KEYWORDS or dotSplit[-1] in JAVASCRIPT_KEYWORDS:
+                pass
+
+            else:
+                print('\t', lineNumber, ' funcCall:', funcCall)
             j += 1
-        # leftSide = lparen[0]
-        # for string in
-        # leftSide = leftSide.split()
 
 
 # ---------------------------------------------------
@@ -226,6 +238,13 @@ def findFunctions(line, lineNumber):
 
 
 # ---------------------------------------------------
+def getFuncDefinitionLines():
+    funcDefinitionLines = []
+    for func in functionDeclarations:
+        funcDefinitionLines.append(func['line'])
+    return funcDefinitionLines
+
+# ---------------------------------------------------
 
 def main():
     # Reading of the JavaScript file - work on after perfecting pattern detection
@@ -267,17 +286,12 @@ def main():
     print('functionRanges', functionRanges)
     getFunctionBody(functionRanges)
 
-    for func in functionDeclarations:
-        print('\n\n', func)
+    # for func in functionDeclarations:
+    #     print('\n\n', func)
+
 
     # print(functionDeclarations[-2]['functionBody'])
 
-    # Iterate over all lines again to get function calls
-    # i = 0
-    # for line in x:
-    #   if(i < fileLength):
-    #       findFunctionCalls(line, i+1)
-    #   i += 1
 
 if __name__ == "__main__":
   main()
