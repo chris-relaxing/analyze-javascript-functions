@@ -17,19 +17,26 @@ print("Analyze JavaScript Functions")
 # Ignore commented lines:
 #   // style 1
 #   /* style 2 */
+# Ignore parenthesis inside SQL queries. For example:
+
+    # let detailQuery = "SELECT ody_jobs.Order_Number, IF( IFNULL( ody_jobs.Job_Number, 0 ) = 0, NULL, LPAD( ody_jobs.Job_Number, 2, '0' ) ) AS Job_Number, ody_jobs.Contact_ID, ody_jobs.Company_ID, ody_jobs.Components, ody_jobs.Description AS Job_Description, ody_jobs.Quantity, ody_jobs.Main_Info, ody_jobs.Other_Info, ody_job_details.* FROM odyssey.ody_job_details INNER JOIN odyssey.ody_jobs USING( Job_ID ) WHERE Detail_ID = "
+
+# Handle the case of !: return !get('groups_active');
+
 # Need to distinguish between
 #  --helper functions,
 #  --regular functions,
 #  --event handlers, and
 #  --anonymous functions
 #  --function declarations vs function expressions
+#  -- arrow functions: (results) =>
 
 
 # ---------------------------------------------------
 
 # Path to JavaScript file to parse
-# jsFile = r"C:\Users\Chris Nielsen\Desktop\odyssey\client\resources\resource_edit.js"
-jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"
+jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\resource_edit.js"
+# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"
 # jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"
 
 # Global tokens
@@ -44,12 +51,8 @@ rightSquig = '}'
 # These are JavaScript language functions and devices that use parenthesis
 # Don't want to comingle these with code base function calls
 JAVASCRIPT_KEYWORDS = [
-    'console.log', 'push', 'isArray', 'Date', 'toISOString', 'moment', 'toDate', 'getDate', 'getMonth', 'getFullYear',
-    'toString', 'slice', 'toLocaleString', '$', 'if', 'substring', 'substr', 'charAt', 'decodeURI', 'decodeURIComponent',
-    'encodeURI', 'encodeURIComponent', 'escape', 'eval', 'isFinite', 'isNaN', 'Number', 'parseFloat', 'parseInt', 'String',
-    'unescape', 'log', 'valueOf'
+    'getUTCDate', 'toString', 'isArray', 'parseFloat', 'getUTCMilliseconds', 'setUTCDate', 'setUTCMilliseconds', 'substr', 'String', 'getMilliseconds', 'toUTCString', 'setHours', 'getYear', 'setUTCFullYear', 'toLocaleTimeString', 'push', 'decodeURI', 'getFullYear', 'isFinite', 'getUTCMinutes', 'getUTCSeconds', 'toLocaleDateString', 'setMilliseconds', 'setUTCSeconds', 'slice', 'toTimeString', 'Number','&&', 'valueOf', 'isNaN', 'getMinutes', 'getMonth', 'toDate', 'getSeconds', 'getUTCFullYear', "'rgba", 'setYear', 'toDateString', 'setUTCMinutes', '$', 'setUTCMonth', 'getUTCDay', 'if', 'encodeURI', 'moment', 'rgba', '+', 'setUTCHours', 'toJSON', 'setMinutes', 'log', 'setSeconds', 'toISOString', 'Date', 'toLocaleString', 'getTimezoneOffset', 'getUTCHours', 'charAt', 'getHours', 'escape', 'setDate', 'eval', 'UTC', 'setTime', 'setFullYear', 'getTime', 'decodeURIComponent', 'substring', 'parseInt', '=', 'console.log', 'unescape', 'getUTCMonth', 'now', 'getDay', 'setMonth', 'getDate', 'for', 'toGMTString', 'parse', 'encodeURIComponent', 'sort', 'round', 'sprintf', 'IN', 'join', 'getAttribute', 'getElementById', 'getElementsByClassName', 'attr', 'replace', '<', '+=', '>', '>=', '<=', '-', '/', '*', 'typeof', 'indexOf', 'ceil', 'abs', 'toFixed', 'toUpperCase', 'toLowerCase', 'JSON.stringify', 'val', 'trim', 'is', 'includes', 'preventDefault', 'prop', 'switch', 'concat', 'splice', 'split', 'hasOwnProperty', 'removeAttr', 'find', 'Template.instance', 'setAttribute', 'css', 'offset', 'scrollTop', 'exec', 'addClass', 'removeClass', 'stopPropagation', 'prev', "'", 'focus', 'click', 'closest', 'show', 'hide', 'html', 'parent', 'each'
 ]
-
 
 
 # Container for all function declaration information (names, args, lines)
@@ -57,6 +60,9 @@ functionDeclarations = []
 
 # Container for all anonymous function declarations (lines, args)
 anonymousFunctions = []
+
+# Container for all anonymous function declarations (lines, args)
+functionCalls = []
 
 # This dicionary for checking for duplicate function names (keys)
 functionNames = {}
@@ -84,7 +90,8 @@ def getFunctionName(line):
 
     #  Pattern: formatDateTime: function()
     elif line[functionIndex-1][-1] == ':':
-        functionName = line[functionIndex-1][:-1]
+        # functionName = line[functionIndex-1][:-1]
+        functionName = " ".join(line).split(':')[0]
         print('functionName:', functionName)
 
     else:
@@ -103,9 +110,14 @@ def getFunctionName(line):
 def getFunctionArgs(line):
     """Parse the element  to return the function arguments"""
     lparen = line.split('(')
-    rightSide = lparen[1]    #right side of the line contains the function args
-    rparen = rightSide.split(')')
-    functionArgs = rparen[0]
+    try:
+        rightSide = lparen[1]    #right side of the line contains the function args
+        rparen = rightSide.split(')')
+        functionArgs = rparen[0]
+    except:
+        rparen = []
+        functionArgs = ""
+
 
     if functionArgs:
         print("Function args:", functionArgs)
@@ -152,7 +164,6 @@ def findFunctionCalls(line, lineNumber):
 
     funcDefinitionLines = getFuncDefinitionLines()
 
-
     #  Look for opening parenthesis
     if (leftParen in line):
         lparenSplit = line.split('(')
@@ -164,7 +175,10 @@ def findFunctionCalls(line, lineNumber):
             l = lparenSplit[j]
             # print('\t l is:', l)
             l = l.split()
-            funcCall = l[-1]
+            try:
+                funcCall = l[-1]
+            except:
+                funcCall = ''
 
             # split the funcCall on the dot
             dotSplit = funcCall.split('.')
@@ -180,9 +194,13 @@ def findFunctionCalls(line, lineNumber):
             # function definition or part of JavaScript built-in functions or key words
             # -----------------------------------------------------
 
+            # Skip if section is empty. For example:  ('00' + (date.getUTCMonth() + 1)).slice(-2) + '-' +
+            if not funcCall:
+                pass
+
             # Get rid of the first instances of function because they are part of the function definition
             # For example: let get = function (n) { return Session.get(pre + n) };
-            if lineNumber in funcDefinitionLines and funcCall == 'function':
+            elif lineNumber in funcDefinitionLines and funcCall == 'function':
                 pass
 
             # Make sure this is not another function definition (alternate format)
@@ -199,6 +217,11 @@ def findFunctionCalls(line, lineNumber):
 
                 if funcCall == 'function':
                     anonymousFunctions.append({'line': lineNumber})
+                else:
+                    functionCalls.append({
+                        'name': funcCall,
+                        'line': lineNumber
+                    })
 
             j += 1
 
@@ -219,10 +242,14 @@ def findFunctions(line, lineNumber):
             print("\n")
             print('Line:', lineNumber, line.rstrip())
 
+            try:
+                rightSide = lparen[1]    #right side of the line contains the function args
+                rparen = rightSide.split(')')
+                args = rparen[0]
+            except:
+                rparen = []
+                args = ""
 
-            rightSide = lparen[1]    #right side of the line contains the function args
-            rparen = rightSide.split(')')
-            args = rparen[0]
 
             functionName = getFunctionName(leftSide)
             functionArgs = getFunctionArgs(line)
@@ -305,13 +332,19 @@ def main():
     print('functionRanges', functionRanges)
     getFunctionBody(functionRanges)
 
-    # for func in functionDeclarations:
-    #     print('\n\n', func)
+    funcDeclarationNames = []
+    for func in functionDeclarations:
+        funcDeclarationNames.append(func['name'])
 
 
     # print(functionDeclarations[-2]['functionBody'])
 
-    print('\nanonymousFunctions', anonymousFunctions)
+    print('\nfunctionDeclarations', funcDeclarationNames, len(funcDeclarationNames))
+
+    print('\nanonymousFunctions', anonymousFunctions, len(anonymousFunctions))
+
+    print('\nfunctionCalls', functionCalls, len(functionCalls))
+
 
 
 if __name__ == "__main__":
