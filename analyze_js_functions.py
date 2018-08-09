@@ -35,8 +35,8 @@ print("Analyze JavaScript Functions")
 # ---------------------------------------------------
 
 # Path to JavaScript file to parse
-jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\resource_edit.js"
-# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"
+# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\resource_edit.js"
+jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"
 # jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"
 
 # Global tokens
@@ -63,6 +63,9 @@ anonymousFunctions = []
 
 # Container for all anonymous function declarations (lines, args)
 functionCalls = []
+
+# List of all line numbers that are commented out
+commentedLines = []
 
 # This dicionary for checking for duplicate function names (keys)
 functionNames = {}
@@ -291,6 +294,18 @@ def getFuncDefinitionLines():
     return funcDefinitionLines
 
 # ---------------------------------------------------
+def identifyCommentLines(line, lineNumber):
+    try:
+        line = line.split()
+        if line[0].startswith('//'):
+            commentedLines.append(lineNumber);
+    except:
+        pass
+
+    # Also need to detect comment blocks that start with /* and end with */
+
+
+# ---------------------------------------------------
 
 def main():
     # Reading of the JavaScript file - work on after perfecting pattern detection
@@ -309,6 +324,7 @@ def main():
     for line in x:
       if(i < fileLength):
           findFunctions(line, i+1)
+          identifyCommentLines(line, i+1)
       i += 1
 
     print('\n\nNumber of function definitions found:', len(functionDeclarations))
@@ -344,6 +360,8 @@ def main():
     print('\nanonymousFunctions', anonymousFunctions, len(anonymousFunctions))
 
     print('\nfunctionCalls', functionCalls, len(functionCalls))
+
+    print('\ncommentedLines', commentedLines, len(commentedLines))
 
 
 
