@@ -17,13 +17,15 @@ print("Analyze JavaScript Functions")
 # Capture all commented lines: -DONE
 #   // style 1      -DONE
 #   /* style 2 */   -DONE
-# Ignore parenthesis inside SQL queries. For example:
 
-    # let detailQuery = "SELECT ody_jobs.Order_Number, IF( IFNULL( ody_jobs.Job_Number, 0 ) = 0, NULL, LPAD( ody_jobs.Job_Number, 2, '0' ) ) AS Job_Number, ody_jobs.Contact_ID, ody_jobs.Company_ID, ody_jobs.Components, ody_jobs.Description AS Job_Description, ody_jobs.Quantity, ody_jobs.Main_Info, ody_jobs.Other_Info, ody_job_details.* FROM odyssey.ody_job_details INNER JOIN odyssey.ody_jobs USING( Job_ID ) WHERE Detail_ID = "
-
-# Handle the case of ! (resource_edit.js line 1401): return !get('groups_active');
 # Handle the case of apparent function call inside HTML quotes (resource_edit.js line 2016):
 #   html += '<p><a href="#" onclick="javascript:$(\'#help_note\').hide();">Close</a></p>';
+    # Ignore parenthesis inside SQL queries. For example:
+
+        # let detailQuery = "SELECT ody_jobs.Order_Number, IF( IFNULL( ody_jobs.Job_Number, 0 ) = 0, NULL, LPAD( ody_jobs.Job_Number, 2, '0' ) ) AS Job_Number, ody_jobs.Contact_ID, ody_jobs.Company_ID, ody_jobs.Components, ody_jobs.Description AS Job_Description, ody_jobs.Quantity, ody_jobs.Main_Info, ody_jobs.Other_Info, ody_job_details.* FROM odyssey.ody_job_details INNER JOIN odyssey.ody_jobs USING( Job_ID ) WHERE Detail_ID = "
+
+# Handle the case of ! (resource_edit.js line 1401): return !get('groups_active'); -DONE
+# Handle the case of result[ody.get_userid (usertask.js line 157)
 
 # Need to distinguish between
 #  --helper functions,
@@ -37,9 +39,9 @@ print("Analyze JavaScript Functions")
 # ---------------------------------------------------
 
 # Path to JavaScript file to parse
-jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\resource_edit.js"
-# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"
-# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"
+# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\resource_edit.js"    # large
+# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"         # medium
+jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"     # small
 
 # Global tokens
 space = " "
@@ -53,7 +55,7 @@ rightSquig = '}'
 # These are JavaScript language functions and devices that use parenthesis
 # Don't want to comingle these with code base function calls
 JAVASCRIPT_KEYWORDS = [
-    'getUTCDate', 'toString', 'isArray', 'parseFloat', 'getUTCMilliseconds', 'setUTCDate', 'setUTCMilliseconds', 'substr', 'String', 'getMilliseconds', 'toUTCString', 'setHours', 'getYear', 'setUTCFullYear', 'toLocaleTimeString', 'push', 'decodeURI', 'getFullYear', 'isFinite', 'getUTCMinutes', 'getUTCSeconds', 'toLocaleDateString', 'setMilliseconds', 'setUTCSeconds', 'slice', 'toTimeString', 'Number','&&', 'valueOf', 'isNaN', 'getMinutes', 'getMonth', 'toDate', 'getSeconds', 'getUTCFullYear', "'rgba", 'setYear', 'toDateString', 'setUTCMinutes', '$', 'setUTCMonth', 'getUTCDay', 'if', 'encodeURI', 'moment', 'rgba', '+', 'setUTCHours', 'toJSON', 'setMinutes', 'log', 'setSeconds', 'toISOString', 'Date', 'toLocaleString', 'getTimezoneOffset', 'getUTCHours', 'charAt', 'getHours', 'escape', 'setDate', 'eval', 'UTC', 'setTime', 'setFullYear', 'getTime', 'decodeURIComponent', 'substring', 'parseInt', '=', 'console.log', 'unescape', 'getUTCMonth', 'now', 'getDay', 'setMonth', 'getDate', 'for', 'toGMTString', 'parse', 'encodeURIComponent', 'sort', 'round', 'sprintf', 'IN', 'join', 'getAttribute', 'getElementById', 'getElementsByClassName', 'attr', 'replace', '<', '+=', '>', '>=', '<=', '-', '/', '*', 'typeof', 'indexOf', 'ceil', 'abs', 'toFixed', 'toUpperCase', 'toLowerCase', 'JSON.stringify', 'val', 'trim', 'is', 'includes', 'preventDefault', 'prop', 'switch', 'concat', 'splice', 'split', 'hasOwnProperty', 'removeAttr', 'find', 'Template.instance', 'setAttribute', 'css', 'offset', 'scrollTop', 'exec', 'addClass', 'removeClass', 'stopPropagation', 'prev', "'", 'focus', 'click', 'closest', 'show', 'hide', 'html', 'parent', 'each', 'change', 'position', 'height', 'width', 'search'
+    'getUTCDate', 'toString', 'isArray', 'parseFloat', 'getUTCMilliseconds', 'setUTCDate', 'setUTCMilliseconds', 'substr', 'String', 'getMilliseconds', 'toUTCString', 'setHours', 'getYear', 'setUTCFullYear', 'toLocaleTimeString', 'push', 'decodeURI', 'getFullYear', 'isFinite', 'getUTCMinutes', 'getUTCSeconds', 'toLocaleDateString', 'setMilliseconds', 'setUTCSeconds', 'slice', 'toTimeString', 'Number','&&', 'valueOf', 'isNaN', 'getMinutes', 'getMonth', 'toDate', 'getSeconds', 'getUTCFullYear', "'rgba", 'setYear', 'toDateString', 'setUTCMinutes', '$', 'setUTCMonth', 'getUTCDay', 'if', 'encodeURI', 'moment', 'rgba', '+', 'setUTCHours', 'toJSON', 'setMinutes', 'log', 'setSeconds', 'toISOString', 'Date', 'toLocaleString', 'getTimezoneOffset', 'getUTCHours', 'charAt', 'getHours', 'escape', 'setDate', 'eval', 'UTC', 'setTime', 'setFullYear', 'getTime', 'decodeURIComponent', 'substring', 'parseInt', '=', 'console.log', 'unescape', 'getUTCMonth', 'now', 'getDay', 'setMonth', 'getDate', 'for', 'toGMTString', 'parse', 'encodeURIComponent', 'sort', 'round', 'sprintf', 'IN', 'join', 'getAttribute', 'getElementById', 'getElementsByClassName', 'attr', 'replace', '<', '+=', '>', '>=', '<=', '-', '/', '*', 'typeof', 'indexOf', 'ceil', 'abs', 'toFixed', 'toUpperCase', 'toLowerCase', 'JSON.stringify', 'val', 'trim', 'is', 'includes', 'preventDefault', 'prop', 'switch', 'concat', 'splice', 'split', 'hasOwnProperty', 'removeAttr', 'find', 'Template.instance', 'setAttribute', 'css', 'offset', 'scrollTop', 'exec', 'addClass', 'removeClass', 'stopPropagation', 'prev', "'", 'focus', 'click', 'closest', 'show', 'hide', 'html', 'parent', 'each', 'change', 'position', 'height', 'width', 'search', 'fetch'
 ]
 
 
@@ -75,6 +77,12 @@ commentRangeEnd = ""
 # This dicionary for checking for duplicate function names (keys)
 functionNames = {}
 duplicateFunctionNames = {}
+
+# This dictionary is for looking up a function name given the starting line
+functionNameStartLineLookup = {}
+
+# This dictionary is for looking up a functionDeclarations index given a function name
+functionDeclarationNameIndex = {}
 
 ex1 = 'const formatDateTime = function (isoDate){'
 
@@ -140,6 +148,7 @@ def getFunctionBody(approxFunctionRanges):
         start = range[0]
         end   = range[1]
         print('\n\nstart:', start, 'end:', end-1)
+        print('Function name:\t', functionNameStartLineLookup[start])
 
         i = start-1   # adjust for 0 based indexing
         funcOpen = 0
@@ -150,7 +159,7 @@ def getFunctionBody(approxFunctionRanges):
             currLine = x[i]
             # print(currLine)
 
-            findFunctionCalls(currLine, i+1)
+            findFunctionCalls(currLine, i+1, functionNameStartLineLookup[start])
 
             functionBody += currLine
             functionBodyLineCount += 1
@@ -176,7 +185,7 @@ def getFunctionBody(approxFunctionRanges):
         y += 1
 
 # ---------------------------------------------------
-def findFunctionCalls(line, lineNumber):
+def findFunctionCalls(line, lineNumber, funcName):
 
     funcDefinitionLines = getFuncDefinitionLines()
 
@@ -221,7 +230,7 @@ def findFunctionCalls(line, lineNumber):
                 elif lineNumber in funcDefinitionLines and funcCall == 'function':
                     pass
 
-                # Make sure this is not another function definition (alternate format)
+                # Make sure this is not a function definition (alternate format)
                 # For example: function SQLquery(queryString, callback) {
                 elif lineNumber in funcDefinitionLines and len(l) >= 2 and l[-2] == 'function':
                     pass
@@ -235,7 +244,18 @@ def findFunctionCalls(line, lineNumber):
                     if funcCall.startswith('!'):
                         funcCall = funcCall.lstrip('!')
 
+                    # Clean [ from some function names that are in brackets
+                    if '[' in funcCall:
+                        funcCall = funcCall.split('[')[1]
+
                     print('\t', lineNumber, ' funcCall:', funcCall)
+                    # Get the index of functionDeclarations we need to edit
+                    insertIndex = functionDeclarationNameIndex[funcName]
+                    if functionDeclarations[insertIndex]['functionCalls']:
+                        functionDeclarations[insertIndex]['functionCalls'].append({funcCall: lineNumber})
+                    else:
+                        functionDeclarations[insertIndex]['functionCalls'] = [{funcCall: lineNumber}]
+
 
                     if funcCall == 'function':
                         anonymousFunctions.append({'line': lineNumber})
@@ -279,7 +299,8 @@ def findFunctions(line, lineNumber):
             funcDetails = {
                 'name'  : functionName,
                 'args'  : functionArgs,
-                'startLine'  : lineNumber
+                'startLine'  : lineNumber,
+                'functionCalls' : []
             }
             functionDeclarations.append(funcDetails)
 
@@ -393,12 +414,26 @@ def main():
             funcEnd = functionDeclarations[i+1]['startLine']
         except:
             funcEnd = eof
-        print(funcStart)
         rangeTuple = (funcStart, funcEnd)
         approxFunctionRanges.append(rangeTuple)
         i += 1
 
     print('approxFunctionRanges', approxFunctionRanges)
+
+    # Create a lookup dictionary where the keys are function starting lines and the values are function names
+    index = 0
+    for func in functionDeclarations:
+        funcName =  func['name']
+        funcStart = func['startLine']
+        functionNameStartLineLookup[funcStart] = funcName
+        # Create a lookup dictionary where the keys are function names and the values are the index in functionDeclarations
+        functionDeclarationNameIndex[funcName] = index
+        index += 1
+
+    print('\nfunctionNameStartLineLookup:', functionNameStartLineLookup)
+    print('\nfunctionDeclarationNameIndex:', functionDeclarationNameIndex)
+
+    # Get function bodies (this also calls findFunctionCalls )
     getFunctionBody(approxFunctionRanges)
 
     funcDeclarationNames = []
@@ -412,7 +447,7 @@ def main():
 
     print('\nanonymousFunctions', anonymousFunctions, len(anonymousFunctions))
 
-    print('\nfunctionCalls', functionCalls, len(functionCalls))
+    # print('\nfunctionCalls', functionCalls, len(functionCalls))
 
     print('\ncommentedLines', commentedLines, len(commentedLines))
 
@@ -420,13 +455,31 @@ def main():
 
     print('\nfunctionDeclarations.keys()', functionDeclarations[0].keys(), len(functionDeclarations[0].keys()))
 
+    functionAnalysisNumberLines = []
+    runningTotal = 0
     for func in functionDeclarations:
-        # for key, value in func:
+        numLines =  func['functionBodyLineCount']
+        runningTotal += numLines
+        functionAnalysisNumberLines.append(numLines)
+
+    functionAnalysisNumberLinesAverage =  runningTotal / len(functionAnalysisNumberLines)
+
+    print('\nLongest Function in this file:', max(functionAnalysisNumberLines))
+    print('\nAvergage number of lines per function:', round(functionAnalysisNumberLinesAverage))
+
+
+
+    # for func in functionDeclarations:
+    #     print('\n\tFunction name:', func['name'] )
+    #     print('\tFunction arguments:', func['args'] )
+    #     print('\tStarts on line:', func['startLine'] )
+    #     print('\tEnds on line:', func['endLine'] )
+    #     print('\tNumber of lines:', func['functionBodyLineCount'] )
+
+    for func in functionDeclarations:
         print('\n\tFunction name:', func['name'] )
-        print('\tFunction arguments:', func['args'] )
-        print('\tStarts on line:', func['startLine'] )
-        print('\tEnds on line:', func['endLine'] )
-        print('\tNumber of lines:', func['functionBodyLineCount'] )
+        print('\tFunction calls:', func['functionCalls'] )
+
 
 if __name__ == "__main__":
   main()
