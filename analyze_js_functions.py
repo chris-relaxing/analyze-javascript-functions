@@ -14,9 +14,9 @@ print("Analyze JavaScript Functions")
 # To do:
 # Capture the body of the function { to } -DONE
 # Identify all non-JavaScript language function CALLs
-# Ignore commented lines:
-#   // style 1
-#   /* style 2 */
+# Capture all commented lines: -DONE
+#   // style 1      -DONE
+#   /* style 2 */   -DONE
 # Ignore parenthesis inside SQL queries. For example:
 
     # let detailQuery = "SELECT ody_jobs.Order_Number, IF( IFNULL( ody_jobs.Job_Number, 0 ) = 0, NULL, LPAD( ody_jobs.Job_Number, 2, '0' ) ) AS Job_Number, ody_jobs.Contact_ID, ody_jobs.Company_ID, ody_jobs.Components, ody_jobs.Description AS Job_Description, ody_jobs.Quantity, ody_jobs.Main_Info, ody_jobs.Other_Info, ody_job_details.* FROM odyssey.ody_job_details INNER JOIN odyssey.ody_jobs USING( Job_ID ) WHERE Detail_ID = "
@@ -298,10 +298,11 @@ def getFuncDefinitionLines():
 
 # ---------------------------------------------------
 def identifyCommentLines(line, lineNumber):
+    """Capture all individual commented lines (//) and comment line ranges (/* to */)"""
     global commentRangeStart, commentRangeEnd
-    # print('identifyCommentLines')
     try:
         splitLine = line.split()
+        # Identify comment lines that begin with //
         if splitLine[0].startswith('//'):
             commentedLines.append(lineNumber);
 
@@ -321,9 +322,19 @@ def identifyCommentLines(line, lineNumber):
     except:
         pass
 
-
-
-
+# ---------------------------------------------------
+def addCommentRangesToCommentedLines():
+    """Add all comment line ranges as individual line numbers to commentedLines list."""
+    for tup in commentedLineRanges:
+        # print('\naddCommentRangesToCommentedLines:')
+        start = tup[0]
+        end = tup[1]
+        diff = end - start
+        x = 0
+        while x < diff+1:
+            # print(start + x)
+            commentedLines.append(start + x)
+            x += 1
 
 
 # ---------------------------------------------------
@@ -375,6 +386,9 @@ def main():
 
 
     # print(functionDeclarations[-2]['functionBody'])
+
+    # Take all of the comment ranges and add individual lines to commentedLines
+    addCommentRangesToCommentedLines()
 
     print('\nfunctionDeclarations', funcDeclarationNames, len(funcDeclarationNames))
 
