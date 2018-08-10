@@ -22,6 +22,8 @@ print("Analyze JavaScript Functions")
     # let detailQuery = "SELECT ody_jobs.Order_Number, IF( IFNULL( ody_jobs.Job_Number, 0 ) = 0, NULL, LPAD( ody_jobs.Job_Number, 2, '0' ) ) AS Job_Number, ody_jobs.Contact_ID, ody_jobs.Company_ID, ody_jobs.Components, ody_jobs.Description AS Job_Description, ody_jobs.Quantity, ody_jobs.Main_Info, ody_jobs.Other_Info, ody_job_details.* FROM odyssey.ody_job_details INNER JOIN odyssey.ody_jobs USING( Job_ID ) WHERE Detail_ID = "
 
 # Handle the case of !: return !get('groups_active');
+# Handle the case of apparent function call inside HTML quotes (resource_edit.js line 2016):
+#   html += '<p><a href="#" onclick="javascript:$(\'#help_note\').hide();">Close</a></p>';
 
 # Need to distinguish between
 #  --helper functions,
@@ -35,8 +37,8 @@ print("Analyze JavaScript Functions")
 # ---------------------------------------------------
 
 # Path to JavaScript file to parse
-# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\resource_edit.js"
-jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"
+jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\resource_edit.js"
+# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"
 # jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"
 
 # Global tokens
@@ -130,10 +132,11 @@ def getFunctionArgs(line):
         return functionArgs
 
 # ---------------------------------------------------
-def getFunctionBody(functionRanges):
+def getFunctionBody(approxFunctionRanges):
     """Gather the function body as a string."""
+    # Use this to collect function ranges also.
     y = 0
-    for range in functionRanges:
+    for range in approxFunctionRanges:
         start = range[0]
         end   = range[1]
         print('\n\nstart:', start, 'end:', end-1)
@@ -162,7 +165,14 @@ def getFunctionBody(functionRanges):
 
         # Add the function body to the functionDeclarations dictionary with key 'functionBody'
         functionDeclarations[y]['functionBody'] = functionBody
+
+        # Add the function body line count to functionDeclarations dictionary with key 'functionBodyLineCount'
         functionDeclarations[y]['functionBodyLineCount'] = functionBodyLineCount
+
+        # Add the function body endLine to functionDeclarations dictionary with key 'endLine'
+        endLine = functionBodyLineCount + start - 1
+        functionDeclarations[y]['endLine'] = endLine
+
         y += 1
 
 # ---------------------------------------------------
@@ -170,66 +180,68 @@ def findFunctionCalls(line, lineNumber):
 
     funcDefinitionLines = getFuncDefinitionLines()
 
-    #  Look for opening parenthesis
-    if (leftParen in line):
-        lparenSplit = line.split('(')
-        # print('lparenSplit', lparenSplit, len(lparenSplit))
-        # Last index in lparenSplit does not contain function call name
+    if lineNumber not in commentedLines:
 
-        j = 0
-        while j < len(lparenSplit)-1:
-            l = lparenSplit[j]
-            # print('\t l is:', l)
-            l = l.split()
-            try:
-                funcCall = l[-1]
-            except:
-                funcCall = ''
+        #  Look for opening parenthesis
+        if (leftParen in line):
+            lparenSplit = line.split('(')
+            # print('lparenSplit', lparenSplit, len(lparenSplit))
+            # Last index in lparenSplit does not contain function call name
 
-            # split the funcCall on the dot
-            dotSplit = funcCall.split('.')
+            j = 0
+            while j < len(lparenSplit)-1:
+                l = lparenSplit[j]
+                # print('\t l is:', l)
+                l = l.split()
+                try:
+                    funcCall = l[-1]
+                except:
+                    funcCall = ''
 
-            # split the funcCall on leftSquig
-            # Case of: startCycle = Meteor.setTimeout(function(){cycle();}, 5000)
-            # should not become  ){cycle
-            leftSquigSplit = funcCall.split(leftSquig)
-            if len(leftSquigSplit) > 1:
-                funcCall = leftSquigSplit[-1]
+                # split the funcCall on the dot
+                dotSplit = funcCall.split('.')
 
-            # Filter the function calls so that we have only those that are not part of the
-            # function definition or part of JavaScript built-in functions or key words
-            # -----------------------------------------------------
+                # split the funcCall on leftSquig
+                # Case of: startCycle = Meteor.setTimeout(function(){cycle();}, 5000)
+                # should not become  ){cycle
+                leftSquigSplit = funcCall.split(leftSquig)
+                if len(leftSquigSplit) > 1:
+                    funcCall = leftSquigSplit[-1]
 
-            # Skip if section is empty. For example:  ('00' + (date.getUTCMonth() + 1)).slice(-2) + '-' +
-            if not funcCall:
-                pass
+                # Filter the function calls so that we have only those that are not part of the
+                # function definition or part of JavaScript built-in functions or key words
+                # -----------------------------------------------------
 
-            # Get rid of the first instances of function because they are part of the function definition
-            # For example: let get = function (n) { return Session.get(pre + n) };
-            elif lineNumber in funcDefinitionLines and funcCall == 'function':
-                pass
+                # Skip if section is empty. For example:  ('00' + (date.getUTCMonth() + 1)).slice(-2) + '-' +
+                if not funcCall:
+                    pass
 
-            # Make sure this is not another function definition (alternate format)
-            # For example: function SQLquery(queryString, callback) {
-            elif lineNumber in funcDefinitionLines and len(l) >= 2 and l[-2] == 'function':
-                pass
+                # Get rid of the first instances of function because they are part of the function definition
+                # For example: let get = function (n) { return Session.get(pre + n) };
+                elif lineNumber in funcDefinitionLines and funcCall == 'function':
+                    pass
 
-            # Filter out function names that are JavaScript key words
-            elif funcCall in JAVASCRIPT_KEYWORDS or dotSplit[-1] in JAVASCRIPT_KEYWORDS:
-                pass
+                # Make sure this is not another function definition (alternate format)
+                # For example: function SQLquery(queryString, callback) {
+                elif lineNumber in funcDefinitionLines and len(l) >= 2 and l[-2] == 'function':
+                    pass
 
-            else:
-                print('\t', lineNumber, ' funcCall:', funcCall)
+                # Filter out function names that are JavaScript key words
+                elif funcCall in JAVASCRIPT_KEYWORDS or dotSplit[-1] in JAVASCRIPT_KEYWORDS:
+                    pass
 
-                if funcCall == 'function':
-                    anonymousFunctions.append({'line': lineNumber})
                 else:
-                    functionCalls.append({
-                        'name': funcCall,
-                        'line': lineNumber
-                    })
+                    print('\t', lineNumber, ' funcCall:', funcCall)
 
-            j += 1
+                    if funcCall == 'function':
+                        anonymousFunctions.append({'line': lineNumber})
+                    else:
+                        functionCalls.append({
+                            'name': funcCall,
+                            'line': lineNumber
+                        })
+
+                j += 1
 
 
 # ---------------------------------------------------
@@ -262,7 +274,7 @@ def findFunctions(line, lineNumber):
             funcDetails = {
                 'name'  : functionName,
                 'args'  : functionArgs,
-                'line'  : lineNumber
+                'startLine'  : lineNumber
             }
             functionDeclarations.append(funcDetails)
 
@@ -293,7 +305,7 @@ def findFunctions(line, lineNumber):
 def getFuncDefinitionLines():
     funcDefinitionLines = []
     for func in functionDeclarations:
-        funcDefinitionLines.append(func['line'])
+        funcDefinitionLines.append(func['startLine'])
     return funcDefinitionLines
 
 # ---------------------------------------------------
@@ -359,26 +371,30 @@ def main():
           identifyCommentLines(line, i+1)
       i += 1
 
+    # Take all of the comment ranges and add individual lines to commentedLines
+    addCommentRangesToCommentedLines()
+    commentedLines.sort()
+
     print('\n\nNumber of function definitions found:', len(functionDeclarations))
     print('Duplicate function names:', duplicateFunctionNames)
 
     # Create function line ranges
     i = 0
-    functionRanges = []
+    approxFunctionRanges = []
     while i < len(functionDeclarations):
         eof = len(x)+1
-        funcStart = functionDeclarations[i]['line']
+        funcStart = functionDeclarations[i]['startLine']
         try:
-            funcEnd = functionDeclarations[i+1]['line']
+            funcEnd = functionDeclarations[i+1]['startLine']
         except:
             funcEnd = eof
         print(funcStart)
         rangeTuple = (funcStart, funcEnd)
-        functionRanges.append(rangeTuple)
+        approxFunctionRanges.append(rangeTuple)
         i += 1
 
-    print('functionRanges', functionRanges)
-    getFunctionBody(functionRanges)
+    print('approxFunctionRanges', approxFunctionRanges)
+    getFunctionBody(approxFunctionRanges)
 
     funcDeclarationNames = []
     for func in functionDeclarations:
@@ -386,9 +402,6 @@ def main():
 
 
     # print(functionDeclarations[-2]['functionBody'])
-
-    # Take all of the comment ranges and add individual lines to commentedLines
-    addCommentRangesToCommentedLines()
 
     print('\nfunctionDeclarations', funcDeclarationNames, len(funcDeclarationNames))
 
@@ -400,6 +413,15 @@ def main():
 
     print('\ncommentedLineRanges', commentedLineRanges, len(commentedLineRanges))
 
+    print('\nfunctionDeclarations.keys()', functionDeclarations[0].keys(), len(functionDeclarations[0].keys()))
+
+    for func in functionDeclarations:
+        # for key, value in func:
+        print('\n\tFunction name:', func['name'] )
+        print('\tFunction arguments:', func['args'] )
+        print('\tStarts on line:', func['startLine'] )
+        print('\tEnds on line:', func['endLine'] )
+        print('\tNumber of lines:', func['functionBodyLineCount'] )
 
 if __name__ == "__main__":
   main()
