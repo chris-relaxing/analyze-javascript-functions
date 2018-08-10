@@ -12,20 +12,13 @@ print("Analyze JavaScript Functions")
 # function placeHeader(
 
 # To do:
-# Capture the body of the function { to } -DONE
-# Identify all non-JavaScript language function CALLs
-# Capture all commented lines: -DONE
-#   // style 1      -DONE
-#   /* style 2 */   -DONE
-
 # Handle the case of apparent function call inside HTML quotes (resource_edit.js line 2016):
 #   html += '<p><a href="#" onclick="javascript:$(\'#help_note\').hide();">Close</a></p>';
     # Ignore parenthesis inside SQL queries. For example:
 
         # let detailQuery = "SELECT ody_jobs.Order_Number, IF( IFNULL( ody_jobs.Job_Number, 0 ) = 0, NULL, LPAD( ody_jobs.Job_Number, 2, '0' ) ) AS Job_Number, ody_jobs.Contact_ID, ody_jobs.Company_ID, ody_jobs.Components, ody_jobs.Description AS Job_Description, ody_jobs.Quantity, ody_jobs.Main_Info, ody_jobs.Other_Info, ody_job_details.* FROM odyssey.ody_job_details INNER JOIN odyssey.ody_jobs USING( Job_ID ) WHERE Detail_ID = "
 
-# Handle the case of ! (resource_edit.js line 1401): return !get('groups_active'); -DONE
-# Handle the case of result[ody.get_userid (usertask.js line 157)
+# Handle the case of result[ody.get_userid (usertask.js line 157) -DONE
 
 # Need to distinguish between
 #  --helper functions,
@@ -151,7 +144,8 @@ def getFunctionBody(approxFunctionRanges):
         start = range[0]
         end   = range[1]
         print('\n\nstart:', start, 'end:', end-1)
-        print('Function name:\t', functionNameStartLineLookup[start])
+        functionName = functionNameStartLineLookup[start]
+        print('Function name:\t', functionName)
 
         i = start-1   # adjust for 0 based indexing
         funcOpen = 0
@@ -162,7 +156,7 @@ def getFunctionBody(approxFunctionRanges):
             currLine = x[i]
             # print(currLine)
 
-            findFunctionCalls(currLine, i+1, functionNameStartLineLookup[start])
+            findFunctionCalls(currLine, i+1, functionName)
 
             functionBody += currLine
             functionBodyLineCount += 1
@@ -193,6 +187,19 @@ def findFunctionCalls(line, lineNumber, funcName):
     funcDefinitionLines = getFuncDefinitionLines()
 
     if lineNumber not in commentedLines:
+
+        # sq = "'"
+        # dq = '"'
+        # quotesOpen = 0
+        # quotesClose = 0
+        # quotesOpen += currLine.count(sq)
+        # quotesClose += currLine.count(dq)
+        # Count them in pairs? If the next one is a different kind, add 1, otherwise subtract 1, until reach zero
+        # keep track of active, so we know what is 'different'. When two cancel each other in the middle, active reverts
+        # need a 'stack' for this
+        # https://docs.python.org/2/tutorial/datastructures.html#using-lists-as-stacks
+        #  html += '<p><a href="#" onclick="javascript:$(\'#help_note\').hide();">Close</a></p>';
+
 
         #  Look for opening parenthesis
         if (leftParen in line):
