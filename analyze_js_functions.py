@@ -66,6 +66,9 @@ functionCalls = []
 
 # List of all line numbers that are commented out
 commentedLines = []
+commentedLineRanges = []
+commentRangeStart = ""
+commentRangeEnd = ""
 
 # This dicionary for checking for duplicate function names (keys)
 functionNames = {}
@@ -295,14 +298,32 @@ def getFuncDefinitionLines():
 
 # ---------------------------------------------------
 def identifyCommentLines(line, lineNumber):
+    global commentRangeStart, commentRangeEnd
+    # print('identifyCommentLines')
     try:
-        line = line.split()
-        if line[0].startswith('//'):
+        splitLine = line.split()
+        if splitLine[0].startswith('//'):
             commentedLines.append(lineNumber);
+
+        # # Also need to detect comment blocks that start with /* and end with */
+        if splitLine[0].startswith('/*'):
+            commentRangeStart = lineNumber
+            print('\tFound START of comment range!', lineNumber)
+        if '*/' in line:
+            commentRangeEnd = lineNumber
+            print('\tFound END of comment range!', lineNumber)
+            if commentRangeStart and commentRangeEnd:
+                commentRange = (commentRangeStart, commentRangeEnd)
+                commentedLineRanges.append(commentRange)
+                commentRange = ()
+                commentRangeStart = ""
+                commentRangeEnd = ""
     except:
         pass
 
-    # Also need to detect comment blocks that start with /* and end with */
+
+
+
 
 
 # ---------------------------------------------------
@@ -363,6 +384,7 @@ def main():
 
     print('\ncommentedLines', commentedLines, len(commentedLines))
 
+    print('\ncommentedLineRanges', commentedLineRanges, len(commentedLineRanges))
 
 
 if __name__ == "__main__":

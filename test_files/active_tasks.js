@@ -38,43 +38,43 @@ Template.active_tasks.created = function (){
   todaysDate = new Date().toISOString();
   let thisPrintShopID = ody.get_printshop_id();
 
-  // Use this data for testing, since the database doesn't yet have due dates scheduled for today
-  // let todaysDate = "2017-04-19T05:00:00.000Z";
-  // let thisPrintShopID = '8666';
+  /*Use this data for testing, since the database doesn't yet have due dates scheduled for today
+  let todaysDate = "2017-04-19T05:00:00.000Z";
+  let thisPrintShopID = '8666';
 
-  // Query used: ---------------------------------------
-  // select
-  //   odyssey_js.Printshop_ID as jd_printshopID,
-  //   ws4p.Printshop_ID as ws4p_printshopID,
-  //   odyssey_jd.Description as taskName,
-  //   odyssey_jd.Completed as comp,
-  //   odyssey_js.Scheduled_End as dueDate,
-  //   odyssey_jd.Job_ID as jobID,
-  //   odyssey_jd.Dept_ID as deptID,
-  //   ws4p.Department as deptName,
-  //   odyssey_js.Assigned_To as assignedTo,
-  //   address.Contact_ID as contactId,
-  //   address.First_Name as firstName,
-  //   address.Last_Name as lastName,
-  //   contacts.Photo as photo
-  // from
-  //   odyssey.ody_job_details odyssey_jd,
-  //   odyssey.ody_job_schedule odyssey_js,
-  //   ws4p.customer_service_department ws4p,
-  //   websitesforprinters.address address,
-  //   websitesforprinters. contacts contacts
-  // where
-  //   odyssey_jd.Job_ID = odyssey_js.Job_ID and
-  //   odyssey_js.Scheduled_End <= '2017-04-18T05:00:00.000Z' and
-  //   odyssey_jd.Completed = 0 and
-  //   odyssey_jd.Dept_ID = ws4p.ID and
-  //   odyssey_js.Printshop_ID = '8666' and
-  //   odyssey_js.Printshop_ID =  ws4p.Printshop_ID and
-  //   odyssey_js.Printshop_ID =  address.Printshop_ID and
-  //   odyssey_js.Assigned_To != 0 and
-  //   odyssey_js.Assigned_To = address.Contact_ID and
-  //   address.Contact_ID = contacts.Contact_ID;
-  // --------------------------------------------------
+  Query used: ---------------------------------------
+  select
+    odyssey_js.Printshop_ID as jd_printshopID,
+    ws4p.Printshop_ID as ws4p_printshopID,
+    odyssey_jd.Description as taskName,
+    odyssey_jd.Completed as comp,
+    odyssey_js.Scheduled_End as dueDate,
+    odyssey_jd.Job_ID as jobID,
+    odyssey_jd.Dept_ID as deptID,
+    ws4p.Department as deptName,
+    odyssey_js.Assigned_To as assignedTo,
+    address.Contact_ID as contactId,
+    address.First_Name as firstName,
+    address.Last_Name as lastName,
+    contacts.Photo as photo
+  from
+    odyssey.ody_job_details odyssey_jd,
+    odyssey.ody_job_schedule odyssey_js,
+    ws4p.customer_service_department ws4p,
+    websitesforprinters.address address,
+    websitesforprinters. contacts contacts
+  where
+    odyssey_jd.Job_ID = odyssey_js.Job_ID and
+    odyssey_js.Scheduled_End <= '2017-04-18T05:00:00.000Z' and
+    odyssey_jd.Completed = 0 and
+    odyssey_jd.Dept_ID = ws4p.ID and
+    odyssey_js.Printshop_ID = '8666' and
+    odyssey_js.Printshop_ID =  ws4p.Printshop_ID and
+    odyssey_js.Printshop_ID =  address.Printshop_ID and
+    odyssey_js.Assigned_To != 0 and
+    odyssey_js.Assigned_To = address.Contact_ID and
+    address.Contact_ID = contacts.Contact_ID;
+  --------------------------------------------------*/
 
   /* let queryString = "select odyssey_js.Printshop_ID as jd_printshopID, odyssey_jd.Description as taskName, odyssey_js.Scheduled_End as dueDate, odyssey_jd.Job_ID as jobID, odyssey_jd.Dept_ID as deptID, ws4p.Department as deptName, address.First_Name as firstName, address.Last_Name as lastName, contacts.Photo as photo from odyssey.ody_job_details odyssey_jd, odyssey.ody_job_schedule odyssey_js, ws4p.customer_service_department ws4p,  websitesforprinters.address address, websitesforprinters.contacts contacts where odyssey_jd.Job_ID = odyssey_js.Job_ID and odyssey_js.Scheduled_End <= '" + todaysDate + "' and odyssey_jd.Completed = 0 and odyssey_jd.Dept_ID = ws4p.ID and odyssey_js.Printshop_ID = '" + thisPrintShopID + "' and odyssey_js.Printshop_ID = ws4p.Printshop_ID and odyssey_js.Printshop_ID = address.Printshop_ID and odyssey_js.Assigned_To != 0 and odyssey_js.Assigned_To = address.Contact_ID and address.Contact_ID = contacts.Contact_ID;"
 
