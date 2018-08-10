@@ -40,8 +40,8 @@ print("Analyze JavaScript Functions")
 
 # Path to JavaScript file to parse
 # jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\resource_edit.js"    # large
-# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"         # medium
-jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"     # small
+jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"         # medium
+# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"     # small
 
 # Global tokens
 space = " "
@@ -55,7 +55,7 @@ rightSquig = '}'
 # These are JavaScript language functions and devices that use parenthesis
 # Don't want to comingle these with code base function calls
 JAVASCRIPT_KEYWORDS = [
-    'getUTCDate', 'toString', 'isArray', 'parseFloat', 'getUTCMilliseconds', 'setUTCDate', 'setUTCMilliseconds', 'substr', 'String', 'getMilliseconds', 'toUTCString', 'setHours', 'getYear', 'setUTCFullYear', 'toLocaleTimeString', 'push', 'decodeURI', 'getFullYear', 'isFinite', 'getUTCMinutes', 'getUTCSeconds', 'toLocaleDateString', 'setMilliseconds', 'setUTCSeconds', 'slice', 'toTimeString', 'Number','&&', 'valueOf', 'isNaN', 'getMinutes', 'getMonth', 'toDate', 'getSeconds', 'getUTCFullYear', "'rgba", 'setYear', 'toDateString', 'setUTCMinutes', '$', 'setUTCMonth', 'getUTCDay', 'if', 'encodeURI', 'moment', 'rgba', '+', 'setUTCHours', 'toJSON', 'setMinutes', 'log', 'setSeconds', 'toISOString', 'Date', 'toLocaleString', 'getTimezoneOffset', 'getUTCHours', 'charAt', 'getHours', 'escape', 'setDate', 'eval', 'UTC', 'setTime', 'setFullYear', 'getTime', 'decodeURIComponent', 'substring', 'parseInt', '=', 'console.log', 'unescape', 'getUTCMonth', 'now', 'getDay', 'setMonth', 'getDate', 'for', 'toGMTString', 'parse', 'encodeURIComponent', 'sort', 'round', 'sprintf', 'IN', 'join', 'getAttribute', 'getElementById', 'getElementsByClassName', 'attr', 'replace', '<', '+=', '>', '>=', '<=', '-', '/', '*', 'typeof', 'indexOf', 'ceil', 'abs', 'toFixed', 'toUpperCase', 'toLowerCase', 'JSON.stringify', 'val', 'trim', 'is', 'includes', 'preventDefault', 'prop', 'switch', 'concat', 'splice', 'split', 'hasOwnProperty', 'removeAttr', 'find', 'Template.instance', 'setAttribute', 'css', 'offset', 'scrollTop', 'exec', 'addClass', 'removeClass', 'stopPropagation', 'prev', "'", 'focus', 'click', 'closest', 'show', 'hide', 'html', 'parent', 'each', 'change', 'position', 'height', 'width', 'search', 'fetch'
+    'getUTCDate', 'toString', 'isArray', 'parseFloat', 'getUTCMilliseconds', 'setUTCDate', 'setUTCMilliseconds', 'substr', 'String', 'getMilliseconds', 'toUTCString', 'setHours', 'getYear', 'setUTCFullYear', 'toLocaleTimeString', 'push', 'decodeURI', 'getFullYear', 'isFinite', 'getUTCMinutes', 'getUTCSeconds', 'toLocaleDateString', 'setMilliseconds', 'setUTCSeconds', 'slice', 'toTimeString', 'Number','&&', 'valueOf', 'isNaN', 'getMinutes', 'getMonth', 'toDate', 'getSeconds', 'getUTCFullYear', "'rgba", 'setYear', 'toDateString', 'setUTCMinutes', '$', 'setUTCMonth', 'getUTCDay', 'if', 'encodeURI', 'moment', 'rgba', '+', 'setUTCHours', 'toJSON', 'setMinutes', 'log', 'setSeconds', 'toISOString', 'Date', 'toLocaleString', 'getTimezoneOffset', 'getUTCHours', 'charAt', 'getHours', 'escape', 'setDate', 'eval', 'UTC', 'setTime', 'setFullYear', 'getTime', 'decodeURIComponent', 'substring', 'parseInt', '=', 'console.log', 'unescape', 'getUTCMonth', 'now', 'getDay', 'setMonth', 'getDate', 'for', 'toGMTString', 'parse', 'encodeURIComponent', 'sort', 'round', 'sprintf', 'IN', 'join', 'getAttribute', 'getElementById', 'getElementsByClassName', 'attr', 'replace', '<', '+=', '>', '>=', '<=', '-', '/', '*', 'typeof', 'indexOf', 'ceil', 'abs', 'toFixed', 'toUpperCase', 'toLowerCase', 'JSON.stringify', 'val', 'trim', 'is', 'includes', 'preventDefault', 'prop', 'switch', 'concat', 'splice', 'split', 'hasOwnProperty', 'removeAttr', 'find', 'Template.instance', 'setAttribute', 'css', 'offset', 'scrollTop', 'exec', 'addClass', 'removeClass', 'stopPropagation', 'prev', "'", 'focus', 'click', 'closest', 'show', 'hide', 'html', 'parent', 'each', 'change', 'position', 'height', 'width', 'search', 'fetch', 'Date.prototype.sameDay'
 ]
 
 
@@ -83,6 +83,9 @@ functionNameStartLineLookup = {}
 
 # This dictionary is for looking up a functionDeclarations index given a function name
 functionDeclarationNameIndex = {}
+
+# This dictionary contains counts for every function name. key=function name, value=count
+functionCallCounts = {}
 
 ex1 = 'const formatDateTime = function (isoDate){'
 
@@ -252,9 +255,9 @@ def findFunctionCalls(line, lineNumber, funcName):
                     # Get the index of functionDeclarations we need to edit
                     insertIndex = functionDeclarationNameIndex[funcName]
                     if functionDeclarations[insertIndex]['functionCalls']:
-                        functionDeclarations[insertIndex]['functionCalls'].append({funcCall: lineNumber})
+                        functionDeclarations[insertIndex]['functionCalls'].append({'funcCall': funcCall, 'callLine': lineNumber})
                     else:
-                        functionDeclarations[insertIndex]['functionCalls'] = [{funcCall: lineNumber}]
+                        functionDeclarations[insertIndex]['functionCalls'] = [{ 'funcCall': funcCall, 'callLine': lineNumber}]
 
 
                     if funcCall == 'function':
@@ -476,10 +479,26 @@ def main():
     #     print('\tEnds on line:', func['endLine'] )
     #     print('\tNumber of lines:', func['functionBodyLineCount'] )
 
+    # Load up functionCallCounts
     for func in functionDeclarations:
-        print('\n\tFunction name:', func['name'] )
-        print('\tFunction calls:', func['functionCalls'] )
+        funcName = func['name']
+        print('\n\tFunction name:', funcName )
+        print('\tFunction calls:\n')
+        for elem in func['functionCalls']:
+            funcCall = elem['funcCall']
+            print('\t\t', elem['callLine'], '\t', funcCall)
 
+            if funcCall not in functionCallCounts.keys():
+                functionCallCounts[funcCall] = 1
+            else:
+                functionCallCounts[funcCall] += 1
+
+
+    print('\nFunction call counts:', functionCallCounts)
+    maxFuncCalls = max(functionCallCounts, key=lambda k: functionCallCounts[k])
+    minFuncCalls = min(functionCallCounts, key=lambda k: functionCallCounts[k])
+    print('\nThe function called the most is:', maxFuncCalls, "with", functionCallCounts[maxFuncCalls])
+    print('The function called the least is:', minFuncCalls, "with", functionCallCounts[minFuncCalls])
 
 if __name__ == "__main__":
   main()
