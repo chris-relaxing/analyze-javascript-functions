@@ -1,4 +1,7 @@
+#!python3
 
+import sys
+print('sys.version', sys.version)
 print("Analyze JavaScript Functions")
 
 #  Notes:
@@ -11,14 +14,10 @@ print("Analyze JavaScript Functions")
 # 1. function + space + name + optional space + (
 # function placeHeader(
 
-# To do:
-# Handle the case of apparent function call inside HTML quotes (resource_edit.js line 2016):
-#   html += '<p><a href="#" onclick="javascript:$(\'#help_note\').hide();">Close</a></p>';
-    # Ignore parenthesis inside SQL queries. For example:
+# To do: ---------------------------
 
-        # let detailQuery = "SELECT ody_jobs.Order_Number, IF( IFNULL( ody_jobs.Job_Number, 0 ) = 0, NULL, LPAD( ody_jobs.Job_Number, 2, '0' ) ) AS Job_Number, ody_jobs.Contact_ID, ody_jobs.Company_ID, ody_jobs.Components, ody_jobs.Description AS Job_Description, ody_jobs.Quantity, ody_jobs.Main_Info, ody_jobs.Other_Info, ody_job_details.* FROM odyssey.ody_job_details INNER JOIN odyssey.ody_jobs USING( Job_ID ) WHERE Detail_ID = "
-
-# Handle the case of result[ody.get_userid (usertask.js line 157) -DONE
+# Fix the case of: console.log('jones653 pressRunPopupActive=%s',get('pressRunPopupActive')); (resource_edit.js line 655)
+#  This gives function call name of ',get
 
 # Need to distinguish between
 #  --helper functions,
@@ -33,8 +32,11 @@ print("Analyze JavaScript Functions")
 
 # Path to JavaScript file to parse
 # jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\resource_edit.js"    # large
-jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"         # medium
+# jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\usertask.js"         # medium
 # jsFile = r"C:\Users\Chris Nielsen\Desktop\python\analyze-javascript-functions\test_files\active_tasks.js"     # small
+jsFile = r"C:\Users\Chris\Desktop\Projects\analyze-javascript-functions\test_files\resource_edit.js"
+# jsFile = r"C:\Users\Chris\Desktop\Projects\analyze-javascript-functions\test_files\usertask.js"
+# jsFile = r"C:\Users\Chris\Desktop\Projects\analyze-javascript-functions\test_files\active_tasks.js"
 
 # Global tokens
 space = " "
@@ -188,12 +190,45 @@ def findFunctionCalls(line, lineNumber, funcName):
 
     if lineNumber not in commentedLines:
 
-        # sq = "'"
-        # dq = '"'
-        # quotesOpen = 0
-        # quotesClose = 0
-        # quotesOpen += currLine.count(sq)
-        # quotesClose += currLine.count(dq)
+        sq = "'"
+        dq = '"'
+        nonQuoteLine = ""
+        quoteStack = []
+        if sq in line or dq in line:
+            for char in line:
+                if char == sq:
+                    # print('1', quoteStack)
+                    if len(quoteStack) == 0:
+                        # print('2', quoteStack)
+                        quoteStack.append('s')
+                    else:
+                        if quoteStack[-1] == 's':
+                            quoteStack.pop()
+                            # print('3', quoteStack)
+                        else:
+                            quoteStack.append('s')
+                            # print('4', quoteStack)
+
+                elif char == dq:
+                    # print('5', quoteStack)
+                    if len(quoteStack) == 0:
+                        quoteStack.append('d')
+                        # print('6', quoteStack)
+                    else:
+                        if quoteStack[-1] == 'd':
+                            quoteStack.pop()
+                            # print('7', quoteStack)
+                        else:
+                            quoteStack.append('d')
+                            # print('8', quoteStack)
+                if len(quoteStack) == 0:
+                    nonQuoteLine += char
+            # print('nonQuoteLine', lineNumber, "\t", nonQuoteLine)
+        else:
+            nonQuoteLine = line
+        # if lineNumber > 1561 and lineNumber < 1566:
+        #     print('line', nonQuoteLine)
+
         # Count them in pairs? If the next one is a different kind, add 1, otherwise subtract 1, until reach zero
         # keep track of active, so we know what is 'different'. When two cancel each other in the middle, active reverts
         # need a 'stack' for this
@@ -202,8 +237,10 @@ def findFunctionCalls(line, lineNumber, funcName):
 
 
         #  Look for opening parenthesis
-        if (leftParen in line):
-            lparenSplit = line.split('(')
+        if (leftParen in nonQuoteLine):
+        # if (leftParen in line):
+            lparenSplit = nonQuoteLine.split('(')
+            # lparenSplit = line.split('(')
             # print('lparenSplit', lparenSplit, len(lparenSplit))
             # Last index in lparenSplit does not contain function call name
 
@@ -501,7 +538,7 @@ def main():
                 functionCallCounts[funcCall] += 1
 
 
-    print('\nFunction call counts:', functionCallCounts)
+    print('\nFunction call counts:', functionCallCounts, len(functionCallCounts))
     maxFuncCalls = max(functionCallCounts, key=lambda k: functionCallCounts[k])
     minFuncCalls = min(functionCallCounts, key=lambda k: functionCallCounts[k])
     print('\nThe function called the most is:', maxFuncCalls, "with", functionCallCounts[maxFuncCalls])
